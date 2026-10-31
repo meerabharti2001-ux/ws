@@ -21,12 +21,17 @@ def generate_launch_description():
 
     rviz_file = PathJoinSubstitution([pkg_this, "rviz", "diffdrive.rviz"])
 
-    robot_state_publisher_node = Node(
-            package='robot_state_publisher',
-            executable='robot_state_publisher',
-            output='screen',
-            parameters=[{"robot_description":robot_description}]
-    )
+robot_state_publisher_node = Node(
+    package='robot_state_publisher',
+    executable='robot_state_publisher',
+    output='screen',
+    parameters=[
+        {
+            "robot_description": robot_description,
+            "use_sim_time": True
+        }
+    ]
+)
 
     gz_sim_launch_node = IncludeLaunchDescription(PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py'])]),
             launch_arguments=[('gz_args', [' -r -v 1 ', world_file])])
