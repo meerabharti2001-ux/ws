@@ -75,10 +75,13 @@ robot_state_publisher_node = Node(
 
 
     rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        arguments=["-d", rviz_file]
-    )
+    package="rviz2",
+    executable="rviz2",
+    arguments=["-d", rviz_file],
+    parameters=[
+        {"use_sim_time": True}
+    ]
+)
     
 
     return LaunchDescription([robot_state_publisher_node, rviz_node, gz_sim_launch_node, gz_spawn_entity_node, diff_drive_base_controller_spawner, joint_state_broadcaster_spawner, bridge ])
