@@ -63,15 +63,18 @@ robot_state_publisher_node = Node(
     
     # Bridge
     bridge = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=[
-            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-            '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
-            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan'
-        ],
-        output='screen'
-    )
+    package='ros_gz_bridge',
+    executable='parameter_bridge',
+    arguments=[
+        '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+        '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+        '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan'
+    ],
+    remappings=[
+        ('/scan', '/scan')
+    ],
+    output='screen'
+)
 
 
     rviz_node = Node(
