@@ -4,7 +4,7 @@ project(diffdrive)
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY urdf launch config world
+  DIRECTORY urdf launch config world rviz
   DESTINATION share/${PROJECT_NAME}
 )
 

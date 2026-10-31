@@ -1,0 +1,190 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /RobotModel1
+        - /TF1
+        - /LaserScan1
+        - /Odometry1
+      Splitter Ratio: 0.5
+    Tree Height: 800
+
+  - Class: rviz_common/Selection
+    Name: Selection
+
+  - Class: rviz_common/Tool Properties
+    Name: Tool Properties
+
+  - Class: rviz_common/Views
+    Name: Views
+
+Visualization Manager:
+  Class: ""
+  Displays:
+
+    # Grid
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Alpha: 0.5
+      Cell Size: 1
+      Color: 160; 160; 164
+      Plane: XY
+      Plane Cell Count: 20
+      Reference Frame: odom
+      Value: true
+
+    # Robot Model
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Description Source: Topic
+      Description Topic:
+        Value: /robot_description
+        Depth: 5
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+      Visual Enabled: true
+      Collision Enabled: false
+      Update Interval: 0
+      Value: true
+
+    # TF
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Frame Timeout: 15
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Marker Scale: 0.5
+      Value: true
+
+    # LiDAR Scan
+    - Class: rviz_default_plugins/LaserScan
+      Name: LaserScan
+      Enabled: true
+      Topic:
+        Value: /scan
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+      Style: Points
+      Size (Pixels): 3
+      Size (m): 0.05
+      Color Transformer: FlatColor
+      Color: 0; 255; 0
+      Position Transformer: XYZ
+      Use Fixed Frame: true
+      Selectable: true
+      Value: true
+
+    # Odometry
+    - Class: rviz_default_plugins/Odometry
+      Name: Odometry
+      Enabled: true
+      Keep: 100
+      Position Tolerance: 0.1
+      Angle Tolerance: 0.1
+      Shape:
+        Alpha: 1
+        Axes Length: 0.5
+        Axes Radius: 0.03
+        Head Length: 0.2
+        Head Radius: 0.1
+        Shaft Length: 0.5
+        Shaft Radius: 0.05
+        Value: Arrow
+      Topic:
+        Value: /diff_drive_base_controller/odom
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+      Value: true
+
+    # Robot Path (optional)
+    - Class: rviz_default_plugins/Path
+      Name: Path
+      Enabled: true
+      Topic:
+        Value: /plan
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+      Value: true
+
+  Enabled: true
+
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: odom
+    Frame Rate: 30
+
+  Name: root
+
+  Tools:
+    - Class: rviz_default_plugins/Interact
+
+    - Class: rviz_default_plugins/MoveCamera
+
+    - Class: rviz_default_plugins/Select
+
+    - Class: rviz_default_plugins/FocusCamera
+
+    - Class: rviz_default_plugins/Measure
+
+    - Class: rviz_default_plugins/SetInitialPose
+      Topic:
+        Value: /initialpose
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Value: /goal_pose
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+
+    - Class: rviz_default_plugins/PublishPoint
+      Topic:
+        Value: /clicked_point
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
+
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 6
+      Enable Stereo Rendering:
+        Value: false
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Near Clip Distance: 0.01
+      Pitch: 0.5
+      Target Frame: <Fixed Frame>
+      Value: Orbit (rviz)
+      Yaw: 0.7
+
+Window Geometry:
+  Height: 900
+  Width: 1400
+  X: 100
+  Y: 100

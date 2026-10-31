@@ -19,6 +19,8 @@ def generate_launch_description():
 
     world_file = PathJoinSubstitution([pkg_this, "world", "empty_imu.sdf"])
 
+    rviz_file = PathJoinSubstitution([pkg_this, "rviz", "diffdrive.rviz"])
+
     robot_state_publisher_node = Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
@@ -66,6 +68,12 @@ def generate_launch_description():
         output='screen'
     )
 
+
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        arguments=["-d", rviz_file]
+    )
     
 
-    return LaunchDescription([robot_state_publisher_node, gz_sim_launch_node, gz_spawn_entity_node, diff_drive_base_controller_spawner, joint_state_broadcaster_spawner, bridge ])
+    return LaunchDescription([robot_state_publisher_node, rviz_node, gz_sim_launch_node, gz_spawn_entity_node, diff_drive_base_controller_spawner, joint_state_broadcaster_spawner, bridge ])
