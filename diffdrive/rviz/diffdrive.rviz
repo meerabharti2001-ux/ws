@@ -100,8 +100,8 @@ Visualization Manager:
         Shaft Radius: 0.05
         Value: Arrow
       Topic:
-        Value: /diff_drive_base_controller/odom
-        Depth: 5
+        Value: /odometry/filtered
+        Depth: 10
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
