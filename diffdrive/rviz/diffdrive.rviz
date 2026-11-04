@@ -107,18 +107,7 @@ Visualization Manager:
         Reliability Policy: Reliable
       Value: true
 
-    # Robot Path (optional)
-    - Class: rviz_default_plugins/Path
-      Name: Path
-      Enabled: true
-      Topic:
-        Value: /plan
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-      Value: true
-
+    
   Enabled: true
 
   Global Options:

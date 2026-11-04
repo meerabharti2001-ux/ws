@@ -11,25 +11,15 @@ def generate_launch_description():
 
     pkg_this = FindPackageShare("diffdrive")
 
-    urdf_file = PathJoinSubstitution([
-        pkg_this, "urdf", "diff_drive.xacro.urdf"
-    ])
+    urdf_file = PathJoinSubstitution([pkg_this, "urdf", "diff_drive.xacro.urdf"])
 
-    robot_description = Command([
-        FindExecutable(name="xacro"), " ", urdf_file
-    ])
+    robot_description = Command([FindExecutable(name="xacro"), " ", urdf_file])
 
-    config_file = PathJoinSubstitution([
-        pkg_this, "config", "diff_drive_controller.yaml"
-    ])
+    config_file = PathJoinSubstitution([pkg_this, "config", "diff_drive_controller.yaml"])
 
-    world_file = PathJoinSubstitution([
-        pkg_this, "world", "empty_imu.sdf"
-    ])
+    world_file = PathJoinSubstitution([pkg_this, "world", "empty_imu.sdf"])
 
-    rviz_file = PathJoinSubstitution([
-        pkg_this, "rviz", "diffdrive.rviz"
-    ])
+    rviz_file = PathJoinSubstitution([pkg_this, "rviz", "diffdrive.rviz"])
 
     # Robot State Publisher
     robot_state_publisher_node = Node(
@@ -54,7 +44,7 @@ def generate_launch_description():
             ])
         ]),
         launch_arguments=[
-            ("gz_args", [" -r -v 1 ", world_file])
+            ("gz_args", [" -r -v 3 ", world_file])
         ]
     )
 
@@ -99,7 +89,7 @@ def generate_launch_description():
             "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
             "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan"
         ],
-        output="screen"
+        output="both"
     )
 
     # RViz

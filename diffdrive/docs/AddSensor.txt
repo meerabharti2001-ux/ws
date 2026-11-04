@@ -1,0 +1,7 @@
+how to add a lidar.
+first open the urdf and there you will need to add a lidar link, then add lidar joint before <ros2_control> tag.
+thereafter add lidar gazebo reference after <gazebo> tag.
+thereafter i go to world.sdf and then i added plugin above 
+then i deleted lidar mode inside the world.sdf because it is only for visual only
+then i checked the odom frame and base frame inside config.yaml
+now i checked the launch file and added msg and checked.
