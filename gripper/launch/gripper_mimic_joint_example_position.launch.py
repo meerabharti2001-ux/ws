@@ -1,20 +1,3 @@
-# Copyright 2024 Open Source Robotics Foundation, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# Author: Denis Stogl (Stogl Robotics Consulting)
-#
-
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.actions import RegisterEventHandler
@@ -30,39 +13,36 @@ def generate_launch_description():
     # Launch Arguments
     use_sim_time = LaunchConfiguration('use_sim_time', default=True)
     gz_args = LaunchConfiguration('gz_args', default='')
-    # Get URDF via xacro
-    robot_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name='xacro')]),
-            ' ',
-            PathJoinSubstitution(
-                [FindPackageShare('gz_ros2_control_demos'),
-                 'urdf', 'test_gripper_mimic_joint_position.xacro.urdf']
-            ),
-        ]
-    )
-    robot_description = {'robot_description': robot_description_content}
-    robot_controllers = PathJoinSubstitution(
-        [
-            FindPackageShare('gz_ros2_control_demos'),
-            'config',
-            'gripper_controller_position.yaml',
-        ]
-    )
+
+    pkg_this = FindPackageShare("gripper")
+    urdf_file = PathJoinSubstitution([pkg_this, "urdf", "test_gripper_mimic_joint_position.xacro.urdf"])
+    robot_description = Command([FindExecutable(name="xacro"), " ", urdf_file])
+    config_file = PathJoinSubstitution([pkg_this, "config", "gripper_controller_position.yaml"])
+    world_file = PathJoinSubstitution([pkg_this, "world", "empty_imu.sdf"])
+    rviz_file = PathJoinSubstitution([pkg_this, "rviz", "gripper_position.rviz"])
+
+
 
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[robot_description]
+        parameters=[{"robot_description": robot_description, "use_sim_time": True}]
+    )
+
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        arguments=["-d",rviz_file]
     )
 
     gz_spawn_entity = Node(
         package='ros_gz_sim',
         executable='create',
         output='screen',
-        arguments=['-topic', 'robot_description', '-name',
-                   'gripper', '-allow_renaming', 'true'],
+        arguments=['-topic', 'robot_description', 
+                   '-name', 'gripper', 
+                   '-allow_renaming', 'true'],
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -70,13 +50,14 @@ def generate_launch_description():
         executable='spawner',
         arguments=['joint_state_broadcaster'],
     )
+
     gripper_controller_spawner = Node(
         package='controller_manager',
         executable='spawner',
         arguments=[
             'gripper_controller',
             '--param-file',
-            robot_controllers,
+            config_file,
             ],
     )
 
@@ -88,32 +69,15 @@ def generate_launch_description():
         output='screen'
     )
 
+    world_file = IncludeLaunchDescription(PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py'])]),
+                launch_arguments=[('gz_args', [gz_args, " -r -v 1 ", world_file])])
+
     return LaunchDescription([
-        # Launch gazebo environment
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                [PathJoinSubstitution([FindPackageShare('ros_gz_sim'),
-                                       'launch',
-                                       'gz_sim.launch.py'])]),
-            launch_arguments=[('gz_args', [gz_args, ' -r -v 1 empty.sdf'])]),
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=gz_spawn_entity,
-                on_exit=[joint_state_broadcaster_spawner],
-            )
-        ),
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=joint_state_broadcaster_spawner,
-                on_exit=[gripper_controller_spawner],
-            )
-        ),
+        gz_spawn_entity,
+        world_file,
+        joint_state_broadcaster_spawner,
+        gripper_controller_spawner,
+        rviz_node,
         bridge,
         node_robot_state_publisher,
-        gz_spawn_entity,
-        # Launch Arguments
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value=use_sim_time,
-            description='If true, use simulated clock'),
     ])
