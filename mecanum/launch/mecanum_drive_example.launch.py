@@ -1,17 +1,3 @@
-# Copyright 2024 Open Source Robotics Foundation, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.actions import RegisterEventHandler
@@ -24,34 +10,19 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    # Launch Arguments
-    use_sim_time = LaunchConfiguration('use_sim_time', default=True)
 
-    # Get URDF via xacro
-    robot_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name='xacro')]),
-            ' ',
-            PathJoinSubstitution(
-                [FindPackageShare('gz_ros2_control_demos'),
-                 'urdf', 'test_mecanum_drive.xacro.urdf']
-            ),
-        ]
-    )
-    robot_description = {'robot_description': robot_description_content}
-    robot_controllers = PathJoinSubstitution(
-        [
-            FindPackageShare('gz_ros2_control_demos'),
-            'config',
-            'mecanum_drive_controller.yaml',
-        ]
-    )
-
+    pkg_this = FindPackageShare("mecanum")
+    urdf_file = PathJoinSubstitution([pkg_this, "urdf", "test_mecanum_drive.xacro.urdf"])
+    robot_description = Command([FindExecutable(name="xacro")," ", urdf_file])
+    config_file = PathJoinSubstitution([pkg_this, "config", "mecanum_drive_controller.yaml"])
+    rviz_file = PathJoinSubstitution([pkg_this, "rviz", "mecanum.rviz"])
+    world_file = PathJoinSubstitution([pkg_this, "world", "empty_imu.sdf"])
+    
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[robot_description]
+        parameters=[{"robot_description": robot_description, "use_sim_time": True}]
     )
 
     gz_spawn_entity = Node(
@@ -59,7 +30,8 @@ def generate_launch_description():
         executable='create',
         output='screen',
         arguments=['-topic', 'robot_description',
-                   '-name', 'mecanum_vehicle', '-allow_renaming', 'true'],
+                   '-name', 'mecanum_vehicle', 
+                   '-allow_renaming', 'true'],
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -67,13 +39,14 @@ def generate_launch_description():
         executable='spawner',
         arguments=['joint_state_broadcaster'],
     )
+
     mecanum_drive_controller_spawner = Node(
         package='controller_manager',
         executable='spawner',
         arguments=[
             'mecanum_drive_controller',
             '--param-file',
-            robot_controllers,
+            config_file,
             '--controller-ros-args',
             '-r /mecanum_drive_controller/tf_odometry:=/tf',
             ],
@@ -86,33 +59,22 @@ def generate_launch_description():
         arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
         output='screen'
     )
+    
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        arguments=["-d", rviz_file]
+    )
+
+    gz_launch_node =    IncludeLaunchDescription(PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py'])]),
+                launch_arguments=[('gz_args', [' -r -v 1 ', world_file])])
 
     return LaunchDescription([
-        # Launch gazebo environment
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                [PathJoinSubstitution([FindPackageShare('ros_gz_sim'),
-                                       'launch',
-                                       'gz_sim.launch.py'])]),
-            launch_arguments=[('gz_args', [' -r -v 1 empty.sdf'])]),
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=gz_spawn_entity,
-                on_exit=[joint_state_broadcaster_spawner],
-            )
-        ),
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=joint_state_broadcaster_spawner,
-                on_exit=[mecanum_drive_controller_spawner],
-            )
-        ),
+        rviz_node,
+        gz_spawn_entity,
+        gz_launch_node, 
+        joint_state_broadcaster_spawner,
+        mecanum_drive_controller_spawner,
         bridge,
         node_robot_state_publisher,
-        gz_spawn_entity,
-        # Launch Arguments
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value=use_sim_time,
-            description='If true, use simulated clock'),
     ])
