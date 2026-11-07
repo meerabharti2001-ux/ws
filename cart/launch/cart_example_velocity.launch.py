@@ -1,17 +1,3 @@
-# Copyright 2021 Open Source Robotics Foundation, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.actions import RegisterEventHandler
@@ -27,32 +13,19 @@ def generate_launch_description():
     # Launch Arguments
     use_sim_time = LaunchConfiguration('use_sim_time', default=True)
     gz_args = LaunchConfiguration('gz_args', default='')
+    pkg_this = FindPackageShare("cart")
+    urdf_file = PathJoinSubstitution([pkg_this, "urdf", "test_cart_velocity.xacro.urdf"])
+    robot_description = Command([FindExecutable(name='xacro')," ", urdf_file])
+    config_file = PathJoinSubstitution([pkg_this, "config", "cart_controller_velocity.yaml"])
+    world_file = PathJoinSubstitution([pkg_this, "world", "empty_imu.sdf"])
+    rviz_file = PathJoinSubstitution([pkg_this, "rviz", "cart_velocity.rviz"])
 
-    # Get URDF via xacro
-    robot_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name='xacro')]),
-            ' ',
-            PathJoinSubstitution(
-                [FindPackageShare('gz_ros2_control_demos'),
-                 'urdf', 'test_cart_velocity.xacro.urdf']
-            ),
-        ]
-    )
-    robot_description = {'robot_description': robot_description_content}
-    robot_controllers = PathJoinSubstitution(
-        [
-            FindPackageShare('gz_ros2_control_demos'),
-            'config',
-            'cart_controller_velocity.yaml',
-        ]
-    )
-
+    
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[robot_description]
+        parameters=[{"robot_description": robot_description, "use_sim_time": True}]
     )
 
     gz_spawn_entity = Node(
@@ -60,7 +33,8 @@ def generate_launch_description():
         executable='create',
         output='screen',
         arguments=['-topic', 'robot_description',
-                   '-name', 'cart', '-allow_renaming', 'true'],
+                   '-name', 'cart', 
+                   '-allow_renaming', 'true'],
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -74,7 +48,7 @@ def generate_launch_description():
         arguments=[
             'joint_trajectory_controller',
             '--param-file',
-            robot_controllers,
+            config_file,
             ],
     )
     imu_sensor_broadcaster_spawner = Node(
@@ -83,7 +57,7 @@ def generate_launch_description():
         arguments=[
             'imu_sensor_broadcaster',
             '--param-file',
-            robot_controllers,
+            config_file,
             ],
     )
 
@@ -95,33 +69,15 @@ def generate_launch_description():
         output='screen'
     )
 
+    world_launch = IncludeLaunchDescription(PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py'])]),
+                launch_arguments=[('gz_args', [gz_args, ' -r -v 1 ', world_file])])
+
     return LaunchDescription([
-        # Launch gazebo environment
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                [PathJoinSubstitution([FindPackageShare('ros_gz_sim'),
-                                       'launch',
-                                       'gz_sim.launch.py'])]),
-            launch_arguments=[('gz_args', [gz_args, ' -r -v 1 empty.sdf'])]),
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=gz_spawn_entity,
-                on_exit=[joint_state_broadcaster_spawner],
-            )
-        ),
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=joint_state_broadcaster_spawner,
-                on_exit=[joint_trajectory_controller_spawner,
-                         imu_sensor_broadcaster_spawner],
-            )
-        ),
-        bridge,
-        node_robot_state_publisher,
-        gz_spawn_entity,
-        # Launch Arguments
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value=use_sim_time,
-            description='If true, use simulated clock'),
-    ])
+    world_launch,
+    node_robot_state_publisher,
+    gz_spawn_entity,
+    joint_state_broadcaster_spawner,
+    joint_trajectory_controller_spawner,
+    imu_sensor_broadcaster_spawner,
+    bridge,
+])
